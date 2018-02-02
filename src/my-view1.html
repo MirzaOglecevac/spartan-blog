@@ -1,0 +1,265 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/d2l-more-less/d2l-more-less.html">
+<link rel="import" href="shared-styles.html">
+
+
+<dom-module id="my-view1">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      #container {
+		width: 85%;
+		min-width: 400px;
+		margin: 10px auto;
+		padding: 0;
+	  }
+	  
+	  .blog {
+		width: 46%;
+		padding: 2%;
+		min-height: 460px;
+		max-height: 460px;
+		float: left;
+	  }
+	  
+	  .blog:hover {
+        box-shadow: 1px 2px 2px 1px rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+      }
+	  
+	  .blog img {
+		width: 100%;
+		min-height: 280px;
+		max-height: 280px;
+	  }
+	  
+	  .blog .heading {
+		color: #111;
+	  }
+	  
+	  .blog .text {
+		color: #888;
+		font-size: 16px;
+		min-height: 100px;
+		max-height: 100px;
+		overflow: hidden;
+	  }
+
+      
+	 #footer {
+         display: block;
+         width: 96%;
+         margin: 30px 0 auto;
+         padding: 10px 0;
+         border-top: 2px solid #999;
+         float: left;
+         position: relative;
+         left: 2%;
+       }
+
+      #footer a {
+         text-decoration: none;
+         padding: 0;
+         margin: 0 30px 0 0;
+         color: #999;
+         font-size: 15px;
+       }
+	   
+	   
+	   
+	   
+	   
+	   @media screen and (max-width: 900px) and (min-width: 551px) {
+			
+			.blog {
+				width: 96%;
+				margin-bottom: 20px !important;
+			}
+	   }
+	   
+	   @media screen and (max-width: 550px)  {
+			
+			.blog .text{
+				font-size: 14px;
+			}
+			
+			.blog {
+				width: 96%;
+				min-height: 480px;
+				max-height: 480px;
+				margin-bottom: 20px !important;
+			}
+	   }
+	  
+
+
+
+    </style>
+
+
+
+
+      <div id="container">
+
+        <iron-ajax
+                    auto
+                    url="http://api.blog.diamondappgroup.com/blog/posts"
+                    handle-as="json"
+                    last-response="{{ajaxResponse}}">
+             </iron-ajax>
+
+        <app-indexeddb-mirror
+          key="posts"
+          data="{{ajaxResponse.data}}"
+          persisted-data="{{persistedData}}">
+        </app-indexeddb-mirror>
+
+
+		
+        <template is="dom-repeat" items={{persistedData}} as="data" >
+
+
+
+          <a class="linkToViewPage" href="http://127.0.0.1:8081/view2" on-click="showPost" >
+		  
+			  <div  class="blog">
+
+				<img clicked-id="{{index}}" class="blogImage" src$="{{checkImage(data.images.0.path)}}" alt="Image Not Found"  />
+
+				<h3 clicked-id="{{index}}" class="heading" > {{data.name}} </h3>
+
+				<!--<p clicked-id="{{index}}" class="date">{{formatDate(data.date)}}</p>-->
+
+				<p  clicked-id="{{index}}" class="text">{{stripBody(data.body)}}</p>
+
+			  </div>
+		  
+		  </a>
+
+
+
+
+        </template>
+	
+
+		 <br/>
+          
+
+            <div id="footer">
+
+                  <a href="#"> Help </a>
+                  <a href="#"> Press kit </a>
+                  <a href="#"> Our apps </a>
+
+           </div>
+
+      </div>
+
+
+
+  </template>
+
+  <script>
+    class MyView1 extends Polymer.Element {
+      static get is() { return 'my-view1'; }
+
+      static get properties() {
+
+        return {
+			persistedData: {
+			  type: Array
+			},
+			idnumber: {
+			  type: Number
+			},
+			clickedId: {
+			  type: Number
+			},
+			openedBlogImage: {
+			  type: String,
+			},
+			openedBlogName: {
+			  type: String
+			},
+			openedBlogBody: {
+			  type: String
+			},
+			openedBlogDate: {
+			  type: String
+			}
+
+    }
+  }
+	
+	 stripBody(data){
+        data = data.replace(/<[^>]*>/g, '');
+        return data;
+      }
+	  
+	  checkImage(img){
+		if(img == undefined){
+			return "placeholder.jpg";
+		}else {
+			return img;
+		}
+	  }
+	  
+	  
+      json(obj) {
+        return JSON.stringify(obj, null, 2);
+      }
+
+     
+
+
+      showPost(event){
+        var id = parseInt(event.target.clickedId);
+        this.idnumber = id;
+        this.getItems();
+      }
+
+      getItems(){
+  
+  
+		if(this.persistedData[this.idnumber].images[0] == undefined){
+			this.openedBlogImage =  "placeholder.jpg";
+		}else {
+			this.openedBlogImage =  this.persistedData[this.idnumber].images[0].path;
+		}
+        
+        
+		
+		this.openedBlogName = this.persistedData[this.idnumber].name;
+        this.openedBlogDate = this.persistedData[this.idnumber].date;
+        this.openedBlogBody = this.persistedData[this.idnumber].body;
+		
+		sessionStorage.setItem('name', this.openedBlogName);
+		sessionStorage.setItem('image', this.openedBlogImage);
+		sessionStorage.setItem('date', this.openedBlogDate);
+		sessionStorage.setItem('body', this.openedBlogBody);
+
+
+        this.dispatchEvent(new CustomEvent('my-event',{bubbles: true, composed: true, detail: {value1: this.openedBlogName, value2: this.openedBlogBody, value3: this.openedBlogImage, value4: this.openedBlogDate}}));
+		window.location.reload();
+      }
+	  
+	  
+
+    }
+
+    window.customElements.define(MyView1.is, MyView1);
+  </script>
+</dom-module>

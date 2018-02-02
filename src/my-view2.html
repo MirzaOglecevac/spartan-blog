@@ -1,0 +1,344 @@
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="my-view1.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view2">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+	  
+	   #container {
+		width: 75%;
+		margin: 10px auto;
+		padding: 0;
+	  }
+	  
+	  .blogPreview {
+		width: 100;
+		padding: 0;
+		margin: 0;
+	  }
+	  
+	  .blogPreview img {
+		width: 100%;
+		height: 500px;
+	  }
+	  
+	  .blog {
+		width: 46%;
+		padding: 2%;
+		min-height: 460px;
+		max-height: 460px;
+		float: left;
+	  }
+	  
+	  .blog:hover {
+        box-shadow: 1px 2px 2px 1px rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+      }
+	  
+	  .blog img {
+		width: 100%;
+		min-height: 280px;
+		max-height: 280px;
+	  }
+	  
+	  .blog .heading {
+		color: #111;
+	  }
+	  
+	  .blog .date {
+		color: #aaa;
+		font-size: 13px;
+	  }
+	  
+	  .blog .text {
+		color: #888;
+		font-size: 16px;
+		min-height: 100px;
+		max-height: 100px;
+		overflow: hidden;
+	  }
+
+      #redLine {
+         width: 100%;
+         padding: 0;
+         margin: 3% auto;
+         height: 10px;
+         background-color: red;
+
+       }
+
+       #footer {
+         display: block;
+         width: 96%;
+         margin: 30px 0 auto;
+         padding: 10px 0;
+         border-top: 2px solid #999;
+         float: left;
+         position: relative;
+         left: 2%;
+       }
+
+       #footer a {
+         text-decoration: none;
+         padding: 0;
+         margin: 0 30px 0 0;
+         color: #999;
+         font-size: 15px;
+       }
+	   
+	   
+	   
+	   
+	   @media screen and (max-width: 900px) {
+			
+			.blog {
+				width: 96%;
+				margin-bottom: 20px !important;
+			}
+	   }
+	   
+	   
+	   @media screen and (max-width: 650px) {
+			
+			.blogPreview img {
+				height: 400px;
+			  }
+			  
+			  .text {
+				font-size: 14px;
+			  }
+			  
+			  .heading {
+				font-size: 16px;
+			  }
+			  
+			  .date {
+				font-size: 13px;
+			  }
+	   }
+
+
+
+    </style>
+
+    <div id="container">
+
+      <div  class="blogPreview">
+
+        <img src$="{{openedImage}}" alt="Image Not Found"/>
+
+        <h3  class="heading"> {{openedName}} </h3>
+
+        <p  class="date">{{formatDate(openedDate)}}</p>
+
+        <p  class="text">{{stripBody(openedBody)}}</p>
+
+      </div>
+
+      <div id="redLine"></div>
+
+
+      <h2 class="outsideHeading"> Related </h2>
+
+          <iron-ajax
+                  id="ajax"
+                  auto
+                  url="http://api.blog.diamondappgroup.com/blog/suggestions"
+                  handle-as="json"
+                  last-response="{{ajaxResponse}}">
+           </iron-ajax>
+
+           <app-indexeddb-mirror
+             key="posts"
+             data="{{ajaxResponse.data}}"
+             persisted-data="{{persistedData}}">
+           </app-indexeddb-mirror>
+
+           <template is="dom-repeat" items={{persistedData}} as="data" filter="indexLowerThanTwo">
+
+             <a class="linkToViewPage" href="http://127.0.0.1:8081/view2" clicked-id="{{index}}" on-click="showPost" > 
+
+			 <div  class="blog">
+
+				<img clicked-id="{{index}}" class="blogImage" src$="{{checkImage(data.images.0.path)}}" alt="Image Not Found"  />
+
+				<h3 clicked-id="{{index}}" class="heading"  > {{data.name}}  </h3>
+
+				<!--<p clicked-id="{{index}}" class="date">{{formatDate(data.date)}}</p>-->
+
+				<p  clicked-id="{{index}}" class="text">{{stripBody(data.body)}}</p>
+
+			  </div>
+			 
+			 </a>
+
+
+
+
+           </template>
+
+           <div id="footer">
+
+                 <a href="#"> Help </a>
+                 <a href="#"> Press kit </a>
+                 <a href="#"> Our apps </a>
+
+          </div>
+
+    </div>
+
+
+
+  </template>
+
+  <script>
+    class MyView2 extends Polymer.Element {
+      static get is() { return 'my-view2'; }
+
+      static get properties() {
+        return {
+
+        clickedId: {
+          type:Number
+        },
+		openedImage: {
+          type: String
+        },
+        openedName: {
+          type: String
+        },
+        openedBody: {
+          type: String
+        },
+        openedDate: {
+          type: String
+        }
+        }
+      }
+
+		
+
+      connectedCallback(){
+    		super.connectedCallback();
+    		window.addEventListener('my-event', e => {this.openedName = e.detail.value1, this.openedBody = e.detail.value2, this.openedImage = e.detail.value3, this.openedDate = e.detail.value4});
+			//window.addEventListener('my-event', e => this.openedName = e.detail.value1);			
+			
+			if(this.openedName !== "undefined"){
+				this.openedName = sessionStorage.getItem('name');
+				this.openedImage = sessionStorage.getItem('image');
+				this.openedDate = sessionStorage.getItem('date');
+				this.openedBody = sessionStorage.getItem('body');
+				
+			}
+			
+    	}
+		
+		
+	 indexLowerThanTwo(item, index){
+		
+		if(index <= 1){
+			return item;
+		}
+	 }
+
+
+      json(obj) {
+        return JSON.stringify(obj, null, 2);
+      }
+	  
+	  reloadThePage(){  	
+		window.location.reload();
+	  }
+	  
+	  stripBody(data){
+        
+		if(data != undefined){
+        data = data.replace(/<[^>]*>/g, '');
+        return data;
+		} else {return data;}
+      }
+	  
+	  formatDate(date){
+		
+		if(date != undefined){
+		var year = date.substring(0,4);
+		var m = parseInt(date.substring(5,7));
+		var day = date.substring(8,10);
+		var month;
+		
+		switch(m) {
+			case 1: month = "Jan"; break;
+			case 2: month = "Feb";break;
+			case 3: month = "Mar";break;
+			case 4: month = "Apr";break;
+			case 5: month = "May"; break;
+			case 6: month = "Jun"; break;
+			case 7: month = "Jul"; break;
+			case 8: month = "Aug"; break;
+			case 9: month = "Sep"; break;
+			case 10: month = "Oct"; break;
+			case 11: month = "Nov"; break;
+			case 12: month = "Dec"; break;
+			default: month = "Unknown";
+		}
+		
+		return day + " " + month + " " + year;
+		
+		} else {return date;}
+		
+	  }
+	  
+	  checkImage(img){
+		if(img == undefined){
+			return "placeholder.jpg";
+		}else {
+			return img;
+		}
+	  }
+
+
+      showPost(event){
+
+        var id = parseInt(event.target.clickedId);
+        this.idnumber = id;
+
+        this.getItems();
+      }
+
+      getItems(){ 
+        
+		if(this.persistedData[this.idnumber].images[0] == undefined){
+			this.openedImage =  "placeholder.jpg";
+		}else if(this.persistedData[this.idnumber].images[0] != undefined  && this.openedImage != "placeholder.jpg") {
+			this.openedImage =  this.persistedData[this.idnumber].images[0].path;
+		}else {
+			this.openedImage =  this.persistedData[this.idnumber].images[0].path;
+		}
+        this.openedName = this.persistedData[this.idnumber].name;
+        this.openedDate = this.persistedData[this.idnumber].date; 
+        this.openedBody = this.persistedData[this.idnumber].body;
+
+        sessionStorage.setItem('name', this.openedName);
+		sessionStorage.setItem('image', this.openedImage);
+		sessionStorage.setItem('date', this.openedDate);
+		sessionStorage.setItem('body', this.openedBody);
+		
+		this.reloadThePage();
+      }
+
+     
+
+
+    }
+
+    window.customElements.define(MyView2.is, MyView2);
+
+  </script>
+</dom-module>
